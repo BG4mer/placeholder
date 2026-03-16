@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Lumo file",
+      "type": "python",
+      "request": "launch",
+      "program": "$BG4mer/placeholder/interpreter.py",
+      "args": ["${file}"],          // runs the currently open file
+      "console": "integratedTerminal"
+    }
+  ]
+}

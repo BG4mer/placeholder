@@ -1,0 +1,16 @@
+# hello.lum - sample Lumo program
+
+x = 5
+y = 10.5
+z = x * (y + 2)
+
+pi = pi   # SAFE_CONSTS exposes pi; this shows you can use pi directly
+r = 2
+area = pi * r * r
+
+print area
+name = "Lumo"
+print "Hello " + name
+print sqrt(16)
+print x + y / 2
+print (x + y) / 2
