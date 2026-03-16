@@ -199,3 +199,76 @@ if __name__ == '__main__':
         sys.exit(1)
     filename = sys.argv[1]
     run_file(filename)
+
+# Add this to interpreter.py
+
+functions = {}  # stores function definitions
+
+# new helper: parse functions before execution
+def parse_functions(lines):
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        if line.startswith('func '):
+            header = line[len('func '):].strip()
+            if '(' in header and ')' in header:
+                fname, params_raw = header.split('(', 1)
+                fname = fname.strip()
+                params = [p.strip() for p in params_raw[:-1].split(',')] if params_raw[:-1] else []
+                # collect body until 'end'
+                body = []
+                i += 1
+                while i < len(lines):
+                    body_line = lines[i].strip()
+                    if body_line == 'end':
+                        break
+                    body.append(lines[i])
+                    i += 1
+                functions[fname] = (params, body)
+        i += 1
+
+# call a function
+def call_function(fname, args):
+    if fname not in functions:
+        raise NameError(f"Function '{fname}' not defined")
+    params, body = functions[fname]
+    if len(args) > len(params):
+        raise TypeError(f"{fname} expected {len(params)} arguments, got {len(args)}")
+    
+    # create local scope for the function
+    local_vars = variables.copy()
+    for p, v in zip(params, args):
+        local_vars[p] = v
+    
+    ret_val = None
+    for line in body:
+        line_clean = line.split('#',1)[0].strip()
+        if not line_clean:
+            continue
+        # return statement
+        if line_clean.startswith('return '):
+            expr = line_clean[len('return '):].strip()
+            ret_val = safe_eval(expr)
+            return ret_val
+        # print statement
+        if line_clean.startswith('print '):
+            expr = line_clean[len('print '):].strip()
+            print(safe_eval(expr))
+            continue
+        # assignment
+        if '=' in line_clean:
+            name, expr = line_clean.split('=',1)
+            name = name.strip()
+            val = safe_eval(expr)
+            local_vars[name] = val
+            continue
+        # function calls inside function
+        for fname2 in functions:
+            if line_clean.startswith(fname2 + '('):
+                args_str = line_clean[len(fname2)+1:-1]
+                args_vals = [safe_eval(a.strip()) for a in args_str.split(',') if a.strip()]
+                call_function(fname2, args_vals)
+    
+    # update global variables after function runs (optional)
+    variables.update(local_vars)
+    return ret_val
